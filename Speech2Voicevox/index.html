@@ -7,8 +7,19 @@
             speech.continuos = true;
 
             speech.onresult = function(e){
-                if(e.results[0].isFinal){
-                    window.chrome.webview.postMessage(e.results[0][0].transcript);
+                if (e.results[0].isFinal) {
+                    let result = e.results[0][0].transcript;
+                    if (result.length >= 1) {
+                        console.log(result);
+                        window.chrome.webview.postMessage(e.results[0][0].transcript);
+                    }
+                } else {
+                    let result = "";
+                    for (let i=e.resultIndex; i < e.results.length; i++) {
+                        result += e.results[i][0].transcript;
+                    }
+                    console.log(result);
+                    document.getElementById('message').innerHTML = "音声認識中 : " + result;
                 }
             };
 
@@ -23,13 +34,14 @@
 
             speech.onnomatch = () => {
                 document.getElementById('message').innerHTML = "もう一度喋ってください";
-            }
+            };
 
             speech.onerror = () => {
                 document.getElementById('message').innerHTML = "エラーになりました。再起動してください";
-            }
+            };
 
             speech.start();
+            document.getElementById('message').innerHTML = "音声認識待ち";
         </script>
     </head>
     <body>

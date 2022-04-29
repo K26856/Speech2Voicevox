@@ -11,7 +11,7 @@
   <Identity
     Name="2da16fc4-fffb-4ca8-a5d1-cf49606fa1eb"
     Publisher="CN=cyan"
-    Version="1.0.3.0" />
+    Version="1.0.23.0" />
 
   <mp:PhoneIdentity PhoneProductId="2da16fc4-fffb-4ca8-a5d1-cf49606fa1eb" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -41,8 +41,6 @@
         BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
-        <uap:InitialRotationPreference>
-          <uap:Rotation Preference="portrait"/></uap:InitialRotationPreference>
       </uap:VisualElements>
     </Application>
   </Applications>
@@ -50,6 +48,7 @@
   <Capabilities>
     <Capability Name="internetClient"/>
     <uap3:Capability Name="backgroundMediaPlayback"/>
+    <Capability Name="privateNetworkClientServer"/>
 	<DeviceCapability Name="microphone"/>
   </Capabilities>
 </Package>

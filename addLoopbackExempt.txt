@@ -1,0 +1,1 @@
+CheckNetIsolation.exe LoopbackExempt -a -n="2da16fc4-fffb-4ca8-a5d1-cf49606fa1eb_vb0ts06mb2gn2"

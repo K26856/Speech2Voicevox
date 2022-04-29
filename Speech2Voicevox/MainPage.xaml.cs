@@ -6,6 +6,7 @@ using Microsoft.Web.WebView2.Core;
 using Windows.Media.Devices;
 using Windows.Devices.Enumeration;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 // 空白ページの項目テンプレートについては、https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x411 を参照してください
 
@@ -19,8 +20,7 @@ namespace Speech2Voicevox
 
         private const int MAX_LOG_ROW = 50;
         private const int MAX_CHARA = 20;
-        private DeviceInformation selectedDevice = (DeviceInformation)null;
-        private int selectedChara = 0;
+        private VoicevoxApi voicevoxApi = new VoicevoxApi();
 
         public MainPage()
         {
@@ -30,18 +30,20 @@ namespace Speech2Voicevox
 
         private void MainPage_loaded(object sender, RoutedEventArgs args)
         {
-            audioSelectorBoxInitialized();
-            charaSelectorBoxInitializedAsync();
+            _ = audioSelectorBoxInitializeAsync();
+            _ = charaSelectorBoxInitialize();
             addLogToTextBox("[SystemMessage] Main Page Loaded");
+#pragma warning disable CS8305 // 型は評価の目的でのみ提供されています。将来の更新で変更または削除されることがあります。
             wv2.CoreWebView2Initialized += Wv2_Initialized;
-            wv2.EnsureCoreWebView2Async();
+            _ = wv2.EnsureCoreWebView2Async();
+#pragma warning restore CS8305 // 型は評価の目的でのみ提供されています。将来の更新で変更または削除されることがあります。
         }
 
 
         // ---------------------------------------------------------
         // 再生デバイス選択ボックスのコントロールまわり
         // ---------------------------------------------------------
-        private async void audioSelectorBoxInitialized()
+        private async Task audioSelectorBoxInitializeAsync()
         {
             string audioSelector = MediaDevice.GetAudioRenderSelector();
             var outputDevices = await DeviceInformation.FindAllAsync(audioSelector);
@@ -59,7 +61,7 @@ namespace Speech2Voicevox
             DeviceInformation selectedDevice = (DeviceInformation)((ComboBoxItem) audioSelectorBox.SelectedItem).Tag;
             if (selectedDevice != null)
             {
-                this.selectedDevice = selectedDevice;
+                voicevoxApi.device = selectedDevice;
             }
         }
 
@@ -67,10 +69,10 @@ namespace Speech2Voicevox
         // ---------------------------------------------------------
         // キャラクター選択ボックスのコントロールまわり
         // ---------------------------------------------------------
-        private async void charaSelectorBoxInitializedAsync()
+        private async Task charaSelectorBoxInitialize()
         {
             charaSelectorBox.DisplayMemberPath = "name";
-            List<VoicevoxSpeaker> speakers = await VoicevoxApi.getSpeakers();
+            var speakers = await voicevoxApi.getSpeakers();
             foreach(VoicevoxSpeaker speaker in speakers)
             {
                 charaSelectorBox.Items.Add(speaker);
@@ -82,7 +84,7 @@ namespace Speech2Voicevox
             VoicevoxSpeaker selected = (VoicevoxSpeaker)charaSelectorBox.SelectedItem;
             if(selected.id > -1)
             {
-                this.selectedChara = selected.id;
+                voicevoxApi.speaker = selected.id;
             }
         }
 
@@ -90,21 +92,33 @@ namespace Speech2Voicevox
         // ----------------------------------------------------------------------------------
         // WebView2 のコントロールまわり
         // ----------------------------------------------------------------------------------
+#pragma warning disable CS8305 // 型は評価の目的でのみ提供されています。将来の更新で変更または削除されることがあります。
         private void Wv2_Initialized(object sender, CoreWebView2InitializedEventArgs args)
+#pragma warning restore CS8305 // 型は評価の目的でのみ提供されています。将来の更新で変更または削除されることがあります。
         {
             addLogToTextBox("[SystemMessage] Web View Initialized");
             string currentDir = Environment.CurrentDirectory;
             Uri uri = new Uri($"{currentDir}/index.html");
+#pragma warning disable CS8305 // 型は評価の目的でのみ提供されています。将来の更新で変更または削除されることがあります。
             wv2.CoreWebView2.Navigate(uri.AbsoluteUri);
             wv2.CoreWebView2.WebMessageReceived += Wv2_WevMessageReceived;
             wv2.CoreWebView2.PermissionRequested += Wv2_PermissionRequested;
+#pragma warning restore CS8305 // 型は評価の目的でのみ提供されています。将来の更新で変更または削除されることがあります。
         }
 
         private void Wv2_WevMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
             string text = args.TryGetWebMessageAsString();
             addLogToTextBox("[SpeechRecognition] " + text);
-            VoicevoxApi.playAudio(text, selectedChara, selectedDevice);
+            Wv2_playAudio(text);
+        }
+
+        private async void Wv2_playAudio(string text)
+        {
+            if(!(await voicevoxApi.playAudio(text)))
+            {
+                addLogToTextBox("[SystemMessage] Failed to make voice data");
+            }
         }
 
         private void Wv2_PermissionRequested(object sender, CoreWebView2PermissionRequestedEventArgs args)

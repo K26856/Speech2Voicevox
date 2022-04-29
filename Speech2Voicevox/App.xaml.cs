@@ -1,18 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace Speech2Voicevox
@@ -30,6 +20,27 @@ namespace Speech2Voicevox
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        }
+
+        private async void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
+        {
+            var exception = e.ExceptionObject as Exception;
+            if (exception == null)
+            {
+                await new Windows.UI.Popups.MessageDialog("System.Exceptionとして扱えない例外").ShowAsync();
+                return;
+            }
+
+            string errorMember = exception.TargetSite.Name;
+            string errorMessage = exception.Message;
+            string message = string.Format(@"例外が{0}で発生。
+プログラムは終了します。
+エラーメッセージ：{1}", errorMember, errorMessage);
+
+            await new Windows.UI.Popups.MessageDialog(message, "UnhandledException").ShowAsync();
+            Environment.Exit(0);
         }
 
         /// <summary>
